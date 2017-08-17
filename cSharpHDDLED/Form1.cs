@@ -54,6 +54,9 @@ namespace cSharpHDDLED
             this.WindowState = FormWindowState.Minimized;
             this.ShowInTaskbar = false;
 
+            //  Start worker thread that pulls HDD activity
+            hddLedWorker = new Thread(new ThreadStart(HddActivityThread));
+            hddLedWorker.Start();
 
         }
 
@@ -67,7 +70,55 @@ namespace cSharpHDDLED
             hddLedIcon.Dispose();
             this.Close(); ;
         }  // closes quitMenuItem_Click function
-#endregion
 
-    }
-}
+        #endregion
+
+
+
+        #region Threads
+
+        /// <summary>
+        /// This is the thread that pulls the HDD for activity and updates the notification icon
+        /// </summary>
+        public void HddActivityThread()
+        {
+            try
+            {
+                ManagementClass driveDataClass = new ManagementClass("Win32_PerfFormattedData_PerfDisk_PhysicalDisk");
+                //  Main loop where all the magic happens
+                while (true)
+                {
+                    //  Connect to the drive performance instance
+                    ManagementObjectCollection driveDataClassCollection = driveDataClass.GetInstances();
+                    foreach( ManagementObject obj in driveDataClassCollection)
+                    {
+                        //  Only process the _Total instance and ignore all the individual instances
+                        if( obj["Name"] == "_Total")
+                        {
+                            if (Convert.ToUInt64(obj["DiskBytesPersec"]) > 0)
+                            {
+                                //  Show busy icon
+                                hddLedIcon.Icon = activeIcon;
+
+                            } else
+                            {
+                                //  Show idle icon
+                                hddLedIcon.Icon = idleIcon;
+
+                            }  // closes else statement
+
+                        }  // closes if statement
+                    }  // closes foreach statemnt
+
+                    //  Slows the loop down so it doesn't consume so much cpu
+                    Thread.Sleep(100);
+                }
+            } catch( ThreadAbortException tbe)
+            {
+
+            }  // closes catch
+        }  // closes HDDActivityThread
+
+        #endregion
+    }  // closes public
+}  // closes namespace
