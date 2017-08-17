@@ -38,6 +38,17 @@ namespace cSharpHDDLED
             hddLedIcon.Icon = idleIcon;
             hddLedIcon.Visible = true;
 
+            //  Create all context menu items and add them to notification tray icon
+            MenuItem progNameMenuItem = new MenuItem("HDD LED v0.1 BETA by: BZ");
+            MenuItem quitMenuItem = new MenuItem("Quit");
+            ContextMenu contextMenu = new ContextMenu();
+            contextMenu.MenuItems.Add(progNameMenuItem);
+            contextMenu.MenuItems.Add(quitMenuItem);
+            hddLedIcon.ContextMenu = contextMenu;
+
+            //  Wire up quit button to close application
+            quitMenuItem.Click += quitMenuItem_Click;
+
 
             //  Hide the form becuase we don't need it, this is a notification tray app
             this.WindowState = FormWindowState.Minimized;
@@ -45,6 +56,17 @@ namespace cSharpHDDLED
 
 
         }
+
+        /// <summary>
+        /// Close the applicaiton on click of 'quit' button on context menu
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        void quitMenuItem_Click(object sender, EventArgs e)
+        {
+            hddLedIcon.Dispose();
+            this.Close(); ;
+        }  // closes quitMenuItem_Click function
 #endregion
 
     }
