@@ -19,10 +19,14 @@ namespace cSharpHDDLED
 
     public partial class Form1 : Form
     {
+        #region Global Variables
+
         NotifyIcon hddLedIcon;
         Icon activeIcon;
         Icon idleIcon;
         Thread hddLedWorker;
+
+        #endregion
 
         #region Form Stuff
         public Form1()
@@ -60,6 +64,10 @@ namespace cSharpHDDLED
 
         }
 
+        #endregion
+
+        #region Event Handlers
+
         /// <summary>
         /// Close the applicaiton on click of 'quit' button on context menu
         /// </summary>
@@ -67,12 +75,14 @@ namespace cSharpHDDLED
         /// <param name="e"></param>
         void quitMenuItem_Click(object sender, EventArgs e)
         {
+            hddLedWorker.Abort();
             hddLedIcon.Dispose();
             this.Close(); ;
         }  // closes quitMenuItem_Click function
 
-        #endregion
 
+
+        #endregion
 
 
         #region Threads
@@ -82,9 +92,9 @@ namespace cSharpHDDLED
         /// </summary>
         public void HddActivityThread()
         {
+            ManagementClass driveDataClass = new ManagementClass("Win32_PerfFormattedData_PerfDisk_PhysicalDisk");
             try
             {
-                ManagementClass driveDataClass = new ManagementClass("Win32_PerfFormattedData_PerfDisk_PhysicalDisk");
                 //  Main loop where all the magic happens
                 while (true)
                 {
@@ -93,7 +103,7 @@ namespace cSharpHDDLED
                     foreach( ManagementObject obj in driveDataClassCollection)
                     {
                         //  Only process the _Total instance and ignore all the individual instances
-                        if( obj["Name"] == "_Total")
+                        if( obj["Name"].ToString() == "_Total")
                         {
                             if (Convert.ToUInt64(obj["DiskBytesPersec"]) > 0)
                             {
@@ -115,6 +125,8 @@ namespace cSharpHDDLED
                 }
             } catch( ThreadAbortException tbe)
             {
+                //  Thread was aborted
+                driveDataClass.Dispose();
 
             }  // closes catch
         }  // closes HDDActivityThread
